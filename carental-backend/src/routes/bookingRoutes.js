@@ -13,6 +13,9 @@ import {
   rejectDocuments,
   createDepositOrder,
   verifyPayment,
+  mockDepositPaid,
+  startRental,
+  completeRental,
 } from "../controllers/bookingController.js";
 import authorize from "../middleware/roleMiddleware.js";
 import upload from "../middleware/upload.js";
@@ -57,4 +60,13 @@ router.post(
 );
 
 router.post("/:id/verify-payment", protect, authorize("USER"), verifyPayment);
+router.patch("/:id/mock-payment", protect, authorize("USER"), mockDepositPaid);
+router.patch("/:id/start-rental", protect, authorize("OWNER"), startRental);
+
+router.patch(
+  "/:id/complete-rental",
+  protect,
+  authorize("OWNER"),
+  completeRental,
+);
 export default router;

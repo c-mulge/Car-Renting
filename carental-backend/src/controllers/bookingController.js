@@ -375,3 +375,140 @@ export const verifyPayment = asyncHandler(async (req, res) => {
 
   return successResponse(res, 200, "Payment verified", updatedBooking);
 });
+
+export const mockDepositPaid = asyncHandler(async (req, res) => {
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: req.params.id,
+    },
+  });
+
+  if (!booking) {
+    return errorResponse(res, 404, "Booking not found");
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: {
+      id: booking.id,
+    },
+    data: {
+      status: "DEPOSIT_PAID",
+    },
+  });
+
+  return successResponse(res, 200, "Mock payment successful", updatedBooking);
+});
+
+export const startRental = asyncHandler(async (req, res) => {
+  const { pickupOdometer } = req.body;
+  if (pickupOdometer === undefined || pickupOdometer === null) {
+    return errorResponse(res, 400, "Pickup odometer is required");
+  }
+
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: req.params.id,
+    },
+
+    include: {
+      vehicle: true,
+    },
+  });
+
+  if (!booking) {
+    return errorResponse(res, 404, "Booking not found");
+  }
+
+  if (booking.vehicle.ownerId !== req.user.id) {
+    return errorResponse(res, 403, "Unauthorized");
+  }
+
+  if (booking.status !== "DEPOSIT_PAID") {
+    return errorResponse(res, 400, "Deposit not paid");
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: {
+      id: booking.id,
+    },
+
+    data: {
+      pickupOdometer,
+      status: "ACTIVE",
+    },
+  });
+
+  return successResponse(res, 200, "Rental started", updatedBooking);
+});
+
+export const completeRental = asyncHandler(async (req, res) => {
+  const { returnOdometer } = req.body;
+
+  if (returnOdometer === undefined || returnOdometer === null) {
+    return errorResponse(res, 400, "Return odometer is required");
+  }
+
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: req.params.id,
+    },
+
+    include: {
+      vehicle: true,
+    },
+  });
+
+  if (!booking) {
+    return errorResponse(res, 404, "Booking not found");
+  }
+
+  if (booking.vehicle.ownerId !== req.user.id) {
+    return errorResponse(res, 403, "Unauthorized");
+  }
+
+  if (booking.status !== "ACTIVE") {
+    return errorResponse(res, 400, "Rental not active");
+  }
+
+  const distanceTravelled = returnOdometer - booking.pickupOdometer;
+
+  if (distanceTravelled < 0) {
+    return errorResponse(res, 400, "Invalid odometer reading");
+  }
+
+  const finalAmount = distanceTravelled * booking.vehicle.pricePerKm;
+
+  const updatedBooking = await prisma.booking.update({
+    where: {
+      id: booking.id,
+    },
+
+    data: {
+      returnOdometer,
+      actualDistance: distanceTravelled,
+      finalAmount,
+      status: "COMPLETED",
+    },
+  });
+  const refundableAmount = Math.max(
+    booking.vehicle.securityDeposit - finalAmount,
+    0,
+  );
+
+  const extraAmountDue = Math.max(
+    finalAmount - booking.vehicle.securityDeposit,
+    0,
+  );
+  return successResponse(res, 200, "Rental completed", {
+    booking: updatedBooking,
+
+    distanceTravelled,
+
+    finalAmount,
+
+    depositPaid: booking.vehicle.securityDeposit,
+    refundableAmount,
+
+    extraAmountDue,
+  });
+});

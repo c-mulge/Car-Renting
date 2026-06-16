@@ -91,7 +91,6 @@ model Booking {
   returnDate    DateTime
   status BookingStatus @default(PENDING)
   depositAmount Float?
-  finalAmount   Float?
 
   vehicle Vehicle @relation(fields: [vehicleId], references: [id])
   user    User    @relation(fields: [userId], references: [id])
@@ -101,6 +100,12 @@ model Booking {
   payment  Payment?
 
   createdAt DateTime @default(now())
+  pickupOdometer Float?
+returnOdometer Float?
+
+actualDistance Float?
+
+finalAmount Float?
 }
 
 model Document {
