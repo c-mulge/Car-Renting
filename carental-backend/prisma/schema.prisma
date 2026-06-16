@@ -23,6 +23,12 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
 model User {
   id           String   @id @default(uuid())
   fullName     String
@@ -102,7 +108,7 @@ model Document {
   bookingId          String @unique
   aadhaarUrl         String
   drivingLicenseUrl  String
-  verificationStatus String
+  verificationStatus VerificationStatus @default(PENDING)
 
   booking Booking @relation(fields: [bookingId], references: [id])
 }
