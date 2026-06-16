@@ -3,7 +3,8 @@ import prisma from "../prisma/prismaClient.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
 import { successResponse, errorResponse } from "../utils/apiResponse.js";
-
+import streamifier from "streamifier";
+import cloudinary from "../config/cloudinary.js";
 export const addVehicle = asyncHandler(async (req, res) => {
   const {
     name,
@@ -97,6 +98,7 @@ export const getAllVehicles = asyncHandler(async (req, res) => {
           fullName: true,
         },
       },
+      images: true,
     },
   });
 
@@ -117,6 +119,7 @@ export const getVehicleById = async (req, res) => {
             email: true,
           },
         },
+        images: true,
       },
     });
 
@@ -133,3 +136,42 @@ export const getVehicleById = async (req, res) => {
     });
   }
 };
+
+export const uploadVehicleImage = asyncHandler(async (req, res) => {
+  const vehicleId = req.params.id;
+
+  const vehicle = await prisma.vehicle.findUnique({
+    where: { id: vehicleId },
+  });
+
+  if (!vehicle) {
+    return errorResponse(res, 404, "Vehicle not found");
+  }
+
+  if (vehicle.ownerId !== req.user.id) {
+    return errorResponse(res, 403, "Unauthorized");
+  }
+
+  const result = await new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "carental/vehicles",
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      },
+    );
+
+    streamifier.createReadStream(req.file.buffer).pipe(stream);
+  });
+
+  const image = await prisma.vehicleImage.create({
+    data: {
+      vehicleId,
+      imageUrl: result.secure_url,
+    },
+  });
+
+  return successResponse(res, 201, "Image uploaded successfully", image);
+});

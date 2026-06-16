@@ -13,6 +13,16 @@ enum Role {
   ADMIN
 }
 
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DEPOSIT_PAID
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id           String   @id @default(uuid())
   fullName     String
@@ -73,7 +83,7 @@ model Booking {
   userId        String
   pickupDate    DateTime
   returnDate    DateTime
-  status        String
+  status BookingStatus @default(PENDING)
   depositAmount Float?
   finalAmount   Float?
 
