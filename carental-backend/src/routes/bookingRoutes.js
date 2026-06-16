@@ -11,6 +11,8 @@ import {
   uploadDocuments,
   verifyDocuments,
   rejectDocuments,
+  createDepositOrder,
+  verifyPayment,
 } from "../controllers/bookingController.js";
 import authorize from "../middleware/roleMiddleware.js";
 import upload from "../middleware/upload.js";
@@ -46,4 +48,13 @@ router.patch(
 );
 
 router.patch("/:id/reject", protect, authorize("OWNER"), rejectBooking);
+
+router.post(
+  "/:id/create-order",
+  protect,
+  authorize("USER"),
+  createDepositOrder,
+);
+
+router.post("/:id/verify-payment", protect, authorize("USER"), verifyPayment);
 export default router;

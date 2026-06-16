@@ -4,6 +4,7 @@ import { successResponse, errorResponse } from "../utils/apiResponse.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 import razorpay from "../config/razorpay.js";
+import crypto from "crypto";
 
 const uploadToCloudinary = (buffer) => {
   return new Promise((resolve, reject) => {
@@ -326,4 +327,51 @@ export const createDepositOrder = asyncHandler(async (req, res) => {
   });
 
   return successResponse(res, 200, "Order created", order);
+});
+
+export const verifyPayment = asyncHandler(async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+    req.body;
+
+  const generatedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(razorpay_order_id + "|" + razorpay_payment_id)
+    .digest("hex");
+
+  if (generatedSignature !== razorpay_signature) {
+    return errorResponse(res, 400, "Invalid payment signature");
+  }
+
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: req.params.id,
+    },
+
+    include: {
+      vehicle: true,
+    },
+  });
+
+  await prisma.payment.create({
+    data: {
+      bookingId: booking.id,
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+
+      amount: booking.vehicle.securityDeposit,
+    },
+  });
+
+  const updatedBooking = await prisma.booking.update({
+    where: {
+      id: booking.id,
+    },
+
+    data: {
+      status: "DEPOSIT_PAID",
+    },
+  });
+
+  return successResponse(res, 200, "Payment verified", updatedBooking);
 });

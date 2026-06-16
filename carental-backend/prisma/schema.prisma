@@ -126,14 +126,18 @@ model OdometerRecord {
 }
 
 model Payment {
-  id                String @id @default(uuid())
-  bookingId         String @unique
-  razorpayPaymentId String?
-  amount            Float
-  paymentType       String
-  status            String
+  id                 String   @id @default(uuid())
+  bookingId          String   @unique
 
-  booking Booking @relation(fields: [bookingId], references: [id])
+  razorpayOrderId    String
+  razorpayPaymentId  String
+  razorpaySignature  String
+
+  amount             Float
+
+  createdAt          DateTime @default(now())
+
+  booking            Booking @relation(fields: [bookingId], references: [id])
 }
 
 model Review {
