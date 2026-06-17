@@ -21,6 +21,13 @@ export const addVehicle = asyncHandler(async (req, res) => {
     description,
     registrationNumber,
   } = req.body;
+  if (pricePerKm <= 0) {
+    return errorResponse(res, 400, "Price per km must be greater than zero");
+  }
+
+  if (securityDeposit < 0) {
+    return errorResponse(res, 400, "Invalid security deposit");
+  }
 
   const existingVehicle = await prisma.vehicle.findUnique({
     where: {
@@ -59,6 +66,7 @@ export const getAllVehicles = asyncHandler(async (req, res) => {
 
   const filters = {
     availabilityStatus: true,
+    isDeleted: false,
   };
 
   if (location) {
@@ -174,4 +182,77 @@ export const uploadVehicleImage = asyncHandler(async (req, res) => {
   });
 
   return successResponse(res, 201, "Image uploaded successfully", image);
+});
+
+export const getMyVehicles = asyncHandler(async (req, res) => {
+  const vehicles = await prisma.vehicle.findMany({
+    where: {
+      ownerId: req.user.id,
+    },
+
+    include: {
+      images: true,
+    },
+  });
+
+  return successResponse(res, 200, "Vehicles fetched successfully", vehicles);
+});
+
+export const updateVehicle = asyncHandler(async (req, res) => {
+  const vehicle = await prisma.vehicle.findUnique({
+    where: {
+      id: req.params.id,
+    },
+  });
+
+  if (!vehicle) {
+    return errorResponse(res, 404, "Vehicle not found");
+  }
+
+  if (vehicle.ownerId !== req.user.id) {
+    return errorResponse(res, 403, "Unauthorized");
+  }
+
+  const updatedVehicle = await prisma.vehicle.update({
+    where: {
+      id: vehicle.id,
+    },
+
+    data: req.body,
+  });
+
+  return successResponse(
+    res,
+    200,
+    "Vehicle updated successfully",
+    updatedVehicle,
+  );
+});
+
+export const deleteVehicle = asyncHandler(async (req, res) => {
+  const vehicle = await prisma.vehicle.findUnique({
+    where: {
+      id: req.params.id,
+    },
+  });
+
+  if (!vehicle) {
+    return errorResponse(res, 404, "Vehicle not found");
+  }
+
+  if (vehicle.ownerId !== req.user.id) {
+    return errorResponse(res, 403, "Unauthorized");
+  }
+
+  await prisma.vehicle.update({
+    where: {
+      id: vehicle.id,
+    },
+
+    data: {
+      isDeleted: true,
+    },
+  });
+
+  return successResponse(res, 200, "Vehicle deleted successfully");
 });

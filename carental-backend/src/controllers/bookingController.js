@@ -24,6 +24,21 @@ const uploadToCloudinary = (buffer) => {
 
 export const createBooking = asyncHandler(async (req, res) => {
   const { vehicleId, pickupDate, returnDate } = req.body;
+  const pickup = new Date(pickupDate);
+
+  const returnD = new Date(returnDate);
+
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+
+  if (pickup < today) {
+    return errorResponse(res, 400, "Pickup date cannot be in the past");
+  }
+
+  if (pickup >= returnD) {
+    return errorResponse(res, 400, "Return date must be after pickup date");
+  }
 
   const vehicle = await prisma.vehicle.findUnique({
     where: {
@@ -159,6 +174,11 @@ export const approveBooking = asyncHandler(async (req, res) => {
       status: "APPROVED",
     },
   });
+  await createNotification(
+    booking.userId,
+    "Booking Approved",
+    "Your booking has been approved.",
+  );
 
   return successResponse(res, 200, "Booking approved", updatedBooking);
 });
@@ -194,6 +214,11 @@ export const rejectBooking = asyncHandler(async (req, res) => {
       status: "REJECTED",
     },
   });
+  await createNotification(
+    booking.userId,
+    "Booking Rejected",
+    "Your booking has been rejected.",
+  );
 
   return successResponse(res, 200, "Booking rejected", updatedBooking);
 });
@@ -258,6 +283,11 @@ export const verifyDocuments = asyncHandler(async (req, res) => {
       verificationStatus: "VERIFIED",
     },
   });
+  await createNotification(
+    booking.userId,
+    "Documents Verified",
+    "Your documents have been verified.",
+  );
 
   return successResponse(res, 200, "Documents verified", document);
 });
@@ -291,6 +321,11 @@ export const rejectDocuments = asyncHandler(async (req, res) => {
       verificationStatus: "REJECTED",
     },
   });
+  await createNotification(
+    booking.userId,
+    "Documents Rejected",
+    "Please upload valid documents.",
+  );
 
   return successResponse(res, 200, "Documents rejected", document);
 });
@@ -401,6 +436,9 @@ export const mockDepositPaid = asyncHandler(async (req, res) => {
 
 export const startRental = asyncHandler(async (req, res) => {
   const { pickupOdometer } = req.body;
+  if (pickupOdometer < 0) {
+    return errorResponse(res, 400, "Invalid pickup odometer");
+  }
   if (pickupOdometer === undefined || pickupOdometer === null) {
     return errorResponse(res, 400, "Pickup odometer is required");
   }
@@ -443,6 +481,9 @@ export const startRental = asyncHandler(async (req, res) => {
 
 export const completeRental = asyncHandler(async (req, res) => {
   const { returnOdometer } = req.body;
+  if (returnOdometer < 0) {
+    return errorResponse(res, 400, "Invalid return odometer");
+  }
 
   if (returnOdometer === undefined || returnOdometer === null) {
     return errorResponse(res, 400, "Return odometer is required");
@@ -490,6 +531,11 @@ export const completeRental = asyncHandler(async (req, res) => {
       status: "COMPLETED",
     },
   });
+  await createNotification(
+    booking.userId,
+    "Rental Completed",
+    "Your rental has been completed successfully.",
+  );
   const refundableAmount = Math.max(
     booking.vehicle.securityDeposit - finalAmount,
     0,
@@ -511,4 +557,47 @@ export const completeRental = asyncHandler(async (req, res) => {
 
     extraAmountDue,
   });
+});
+
+export const cancelBooking = asyncHandler(async (req, res) => {
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: req.params.id,
+    },
+  });
+
+  if (!booking) {
+    return errorResponse(res, 404, "Booking not found");
+  }
+
+  if (booking.userId !== req.user.id) {
+    return errorResponse(res, 403, "Unauthorized");
+  }
+
+  const cancellableStatuses = ["PENDING", "APPROVED", "DEPOSIT_PAID"];
+
+  if (!cancellableStatuses.includes(booking.status)) {
+    return errorResponse(
+      res,
+      400,
+      `Cannot cancel booking with status ${booking.status}`,
+    );
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: {
+      id: booking.id,
+    },
+
+    data: {
+      status: "CANCELLED",
+    },
+  });
+
+  return successResponse(
+    res,
+    200,
+    "Booking cancelled successfully",
+    updatedBooking,
+  );
 });

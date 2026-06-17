@@ -16,6 +16,7 @@ import {
   mockDepositPaid,
   startRental,
   completeRental,
+  cancelBooking,
 } from "../controllers/bookingController.js";
 import authorize from "../middleware/roleMiddleware.js";
 import upload from "../middleware/upload.js";
@@ -69,4 +70,6 @@ router.patch(
   authorize("OWNER"),
   completeRental,
 );
+
+router.patch("/:id/cancel", protect, authorize("USER"), cancelBooking);
 export default router;

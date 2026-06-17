@@ -5,6 +5,9 @@ import {
   getAllVehicles,
   getVehicleById,
   uploadVehicleImage,
+  getMyVehicles,
+  updateVehicle,
+  deleteVehicle,
 } from "../controllers/vehicleController.js";
 
 import { vehicleValidation } from "../validations/vehicleValidation.js";
@@ -27,6 +30,7 @@ router.post(
 );
 
 router.get("/", getAllVehicles);
+router.get("/my-vehicles", protect, authorize("OWNER"), getMyVehicles);
 
 router.get("/:id", getVehicleById);
 router.post(
@@ -36,5 +40,8 @@ router.post(
   upload.single("image"),
   uploadVehicleImage,
 );
+
+router.put("/:id", protect, authorize("OWNER"), updateVehicle);
+router.delete("/:id", protect, authorize("OWNER"), deleteVehicle);
 
 export default router;
