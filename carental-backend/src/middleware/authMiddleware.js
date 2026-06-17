@@ -13,11 +13,25 @@ const protect = async (req, res, next) => {
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      req.user = await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: {
           id: decoded.id,
         },
       });
+
+      if (!user) {
+        return res.status(401).json({
+          message: "User not found",
+        });
+      }
+
+      if (user.isBlocked) {
+        return res.status(403).json({
+          message: "Account blocked by admin",
+        });
+      }
+
+      req.user = user;
 
       next();
     } else {

@@ -67,6 +67,7 @@ export const getAllVehicles = asyncHandler(async (req, res) => {
   const filters = {
     availabilityStatus: true,
     isDeleted: false,
+    isBlocked: false,
   };
 
   if (location) {

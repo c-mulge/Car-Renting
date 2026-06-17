@@ -8,6 +8,7 @@ import errorHandler from "./middleware/errorMiddleware.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 const app = express();
 
 app.use(cors());
@@ -19,5 +20,6 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 app.use(errorHandler);
 export default app;
