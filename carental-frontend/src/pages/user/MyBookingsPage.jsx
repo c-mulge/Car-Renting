@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import MainLayout from "../../layouts/MainLayout";
 
 import { getMyBookings } from "../../services/bookingService";
+import { Link } from "react-router-dom";
 
 const MyBookingsPage = () => {
   const { data: bookings, isLoading } = useQuery({
@@ -35,6 +36,20 @@ const MyBookingsPage = () => {
                 Status:
                 {booking.status}
               </p>
+              <Link
+                to={`/bookings/${booking.id}/documents`}
+                className="
+    inline-block
+    mt-3
+    bg-black
+    text-white
+    px-4
+    py-2
+    rounded-lg
+  "
+              >
+                Upload Documents
+              </Link>
             </div>
           ))}
         </div>
