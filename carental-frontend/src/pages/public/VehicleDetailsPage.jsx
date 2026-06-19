@@ -8,6 +8,7 @@ import { getVehicleById } from "../../services/vehicleService";
 import BookingForm from "../../components/booking/BookingForm";
 
 import { createBooking } from "../../services/bookingService";
+import toast from "react-hot-toast";
 
 const VehicleDetailsPage = () => {
   const { id } = useParams();
@@ -84,11 +85,11 @@ const handleBooking = async (bookingData) => {
   try {
     const result = await createBooking(bookingData);
 
-    alert("Booking created successfully");
+    toast.success("Booking created successfully");
 
     console.log(result);
   } catch (error) {
-    alert(error?.response?.data?.message || "Booking failed");
+    toast.error(error?.response?.data?.message || "Booking failed");
   }
 };
 

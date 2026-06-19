@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import {
   getOwnerBookings,
   approveBooking,
   rejectBooking,
-  verifyDocuments,
-  rejectDocuments,
 } from "../../services/bookingService";
 
 const BookingRequests = () => {
@@ -21,13 +21,13 @@ const BookingRequests = () => {
     try {
       await approveBooking(id);
 
-      alert("Booking approved");
+      toast.success("Booking approved");
 
       queryClient.invalidateQueries({
         queryKey: ["owner-bookings"],
       });
     } catch (error) {
-      alert(error.response?.data?.message);
+      toast.error(error.response?.data?.message);
     }
   };
 
@@ -35,40 +35,13 @@ const BookingRequests = () => {
     try {
       await rejectBooking(id);
 
-      alert("Booking rejected");
+      toast.success("Booking rejected");
 
       queryClient.invalidateQueries({
         queryKey: ["owner-bookings"],
       });
     } catch (error) {
-      alert(error.response?.data?.message);
-    }
-  };
-  const handleVerifyDocuments = async (bookingId) => {
-    try {
-      await verifyDocuments(bookingId);
-
-      alert("Documents verified");
-
-      queryClient.invalidateQueries({
-        queryKey: ["owner-bookings"],
-      });
-    } catch (error) {
-      alert(error.response?.data?.message);
-    }
-  };
-
-  const handleRejectDocuments = async (bookingId) => {
-    try {
-      await rejectDocuments(bookingId);
-
-      alert("Documents rejected");
-
-      queryClient.invalidateQueries({
-        queryKey: ["owner-bookings"],
-      });
-    } catch (error) {
-      alert(error.response?.data?.message);
+      toast.error(error.response?.data?.message);
     }
   };
 
@@ -116,31 +89,18 @@ const BookingRequests = () => {
             {booking.document &&
               booking.document.verificationStatus === "PENDING" && (
                 <div className="flex gap-3 mt-3">
-                  <button
-                    onClick={() => handleVerifyDocuments(booking.id)}
+                  <Link
+                    to={`/owner/bookings/${booking.id}/documents`}
                     className="
-      bg-blue-600
-      text-white
-      px-4
-      py-2
-      rounded-lg
-      "
+    bg-blue-600
+    text-white
+    px-4
+    py-2
+    rounded-lg
+  "
                   >
-                    Verify Docs
-                  </button>
-
-                  <button
-                    onClick={() => handleRejectDocuments(booking.id)}
-                    className="
-      bg-orange-600
-      text-white
-      px-4
-      py-2
-      rounded-lg
-      "
-                  >
-                    Reject Docs
-                  </button>
+                    View Documents
+                  </Link>
                 </div>
               )}
 

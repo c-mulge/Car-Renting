@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
 
 import { uploadDocuments } from "../../services/bookingService";
-
+import toast from "react-hot-toast";
 const UploadDocumentsPage = () => {
   const { id } = useParams();
 
@@ -18,9 +18,9 @@ const UploadDocumentsPage = () => {
     try {
       await uploadDocuments(id, aadhaar, license);
 
-      alert("Documents uploaded successfully");
+      toast.success("Documents uploaded successfully");
     } catch (error) {
-      alert(error.response?.data?.message || "Upload failed");
+      toast.error(error.response?.data?.message || "Upload failed");
     }
   };
 

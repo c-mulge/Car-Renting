@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
 
 import { uploadVehicleImage } from "../../services/vehicleService";
+import toast from "react-hot-toast";
 
 const AddVehicleImagePage = () => {
   const { id } = useParams();
@@ -16,9 +17,9 @@ const AddVehicleImagePage = () => {
     try {
       await uploadVehicleImage(id, image);
 
-      alert("Image uploaded successfully");
+      toast.success("Image uploaded successfully");
     } catch (error) {
-      alert(error.response?.data?.message || "Upload failed");
+      toast.error(error.response?.data?.message || "Upload failed");
     }
   };
 

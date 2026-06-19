@@ -13,6 +13,7 @@ import OwnerDashboard from "../pages/owner/OwnerDashboard";
 import AddVehiclePage from "../pages/owner/AddVehiclePage";
 import AddVehicleImagePage from "../pages/owner/AddVehicleImagePage";
 import UploadDocumentsPage from "../pages/user/UploadDocumentsPage";
+import BookingDocumentsPage from "../pages/owner/BookingDocumentsPage";
 const AppRoutes = () => {
   return (
     <BrowserRouter>
@@ -69,6 +70,14 @@ const AppRoutes = () => {
           element={
             <RoleProtectedRoute allowedRoles={["USER"]}>
               <UploadDocumentsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/owner/bookings/:id/documents"
+          element={
+            <RoleProtectedRoute allowedRoles={["OWNER"]}>
+              <BookingDocumentsPage />
             </RoleProtectedRoute>
           }
         />

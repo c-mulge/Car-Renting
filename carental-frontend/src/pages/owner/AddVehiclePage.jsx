@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
 
 import { createVehicle } from "../../services/vehicleService";
+import toast from "react-hot-toast";
 
 const AddVehiclePage = () => {
   const navigate = useNavigate();
@@ -45,11 +46,11 @@ const AddVehiclePage = () => {
 
       await createVehicle(payload);
 
-      alert("Vehicle created successfully");
+      toast.success("Vehicle created successfully");
 
       navigate("/owner");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed");
+      toast.error(error.response?.data?.message || "Failed");
     }
   };
 
