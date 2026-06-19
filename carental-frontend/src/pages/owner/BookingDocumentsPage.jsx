@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -13,6 +14,7 @@ import {
 const BookingDocumentsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const { data: bookings } = useQuery({
     queryKey: ["owner-bookings"],
@@ -27,25 +29,37 @@ const BookingDocumentsPage = () => {
 
   const handleVerify = async () => {
     try {
+      setLoading(true);
+
       await verifyDocuments(booking.id);
 
       toast.success("Documents verified");
 
-      navigate("/owner");
+      setTimeout(() => {
+        navigate("/owner");
+      }, 1000);
     } catch (error) {
       toast.error(error.response?.data?.message || "Verification failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleReject = async () => {
     try {
+      setLoading(true);
+
       await rejectDocuments(booking.id);
 
       toast.success("Documents rejected");
 
-      navigate("/owner");
+      setTimeout(() => {
+        navigate("/owner");
+      }, 1000);
     } catch (error) {
       toast.error(error.response?.data?.message || "Rejection failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,39 +96,55 @@ const BookingDocumentsPage = () => {
           </div>
         </div>
 
-        <div
-          className="
-          flex
-          gap-4
-          mt-8
-          "
-        >
-          <button
-            onClick={handleVerify}
+        {booking.document?.verificationStatus === "PENDING" ? (
+          <div
             className="
-            bg-green-600
-            text-white
-            px-5
-            py-3
-            rounded-lg
-            "
+    flex
+    gap-4
+    mt-8
+    "
           >
-            Verify
-          </button>
+            <button
+              onClick={handleVerify}
+              disabled={loading}
+              className="
+      bg-green-600
+      text-white
+      px-5
+      py-3
+      rounded-lg
+      "
+            >
+              {loading ? "Processing..." : "Verify"}
+            </button>
 
-          <button
-            onClick={handleReject}
-            className="
-            bg-red-600
-            text-white
-            px-5
-            py-3
-            rounded-lg
-            "
-          >
-            Reject
-          </button>
-        </div>
+            <button
+              onClick={handleReject}
+              disabled={loading}
+              className="
+      bg-red-600
+      text-white
+      px-5
+      py-3
+      rounded-lg
+      "
+            >
+              {loading ? "Processing..." : "Reject"}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-8">
+            <p
+              className="
+      text-lg
+      font-semibold
+      "
+            >
+              Document Status:
+              {booking.document?.verificationStatus}
+            </p>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
