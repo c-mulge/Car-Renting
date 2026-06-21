@@ -61,3 +61,36 @@ export const rejectDocuments = async (bookingId) => {
 
   return response.data;
 };
+
+export const createDepositOrder = async (bookingId) => {
+  const response = await api.post(`/bookings/${bookingId}/create-order`);
+
+  return response.data;
+};
+
+export const mockDepositPaid = async (bookingId) => {
+  const response = await api.patch(`/bookings/${bookingId}/mock-payment`);
+
+  return response.data;
+};
+
+export const verifyPayment = async (bookingId, paymentData) => {
+  const response = await api.post(
+    `/bookings/${bookingId}/verify-payment`,
+    paymentData,
+  );
+
+  return response.data;
+};
+
+export const startRental = async (bookingId) => {
+  const response = await api.patch(`/bookings/${bookingId}/start-rental`);
+
+  return response.data;
+};
+
+export const completeRental = async (bookingId) => {
+  const response = await api.patch(`/bookings/${bookingId}/complete-rental`);
+
+  return response.data;
+};

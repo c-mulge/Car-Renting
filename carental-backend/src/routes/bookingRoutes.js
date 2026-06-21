@@ -12,7 +12,7 @@ import {
   verifyDocuments,
   rejectDocuments,
   createDepositOrder,
-  verifyPayment,
+  verifyDepositPayment,
   mockDepositPaid,
   startRental,
   completeRental,
@@ -60,9 +60,15 @@ router.post(
   createDepositOrder,
 );
 
-router.post("/:id/verify-payment", protect, authorize("USER"), verifyPayment);
+// router.post("/:id/verify-payment", protect, authorize("USER"), verifyPayment);
 router.patch("/:id/mock-payment", protect, authorize("USER"), mockDepositPaid);
 router.patch("/:id/start-rental", protect, authorize("OWNER"), startRental);
+router.post(
+  "/:id/verify-payment",
+  protect,
+  authorize("USER"),
+  verifyDepositPayment,
+);
 
 router.patch(
   "/:id/complete-rental",

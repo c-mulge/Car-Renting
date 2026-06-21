@@ -365,17 +365,19 @@ export const createDepositOrder = asyncHandler(async (req, res) => {
   return successResponse(res, 200, "Order created", order);
 });
 
-export const verifyPayment = asyncHandler(async (req, res) => {
+export const verifyDepositPayment = asyncHandler(async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
     req.body;
 
-  const generatedSignature = crypto
+  const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+  const expectedSignature = crypto
     .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-    .update(razorpay_order_id + "|" + razorpay_payment_id)
+    .update(body)
     .digest("hex");
 
-  if (generatedSignature !== razorpay_signature) {
-    return errorResponse(res, 400, "Invalid payment signature");
+  if (expectedSignature !== razorpay_signature) {
+    return errorResponse(res, 400, "Payment verification failed");
   }
 
   const booking = await prisma.booking.findUnique({
@@ -387,12 +389,24 @@ export const verifyPayment = asyncHandler(async (req, res) => {
       vehicle: true,
     },
   });
+  const existingPayment = await prisma.payment.findUnique({
+    where: {
+      bookingId: booking.id,
+    },
+  });
+
+  if (existingPayment) {
+    return errorResponse(res, 400, "Payment already recorded");
+  }
 
   await prisma.payment.create({
     data: {
       bookingId: booking.id,
+
       razorpayOrderId: razorpay_order_id,
+
       razorpayPaymentId: razorpay_payment_id,
+
       razorpaySignature: razorpay_signature,
 
       amount: booking.vehicle.securityDeposit,
@@ -401,9 +415,8 @@ export const verifyPayment = asyncHandler(async (req, res) => {
 
   const updatedBooking = await prisma.booking.update({
     where: {
-      id: booking.id,
+      id: req.params.id,
     },
-
     data: {
       status: "DEPOSIT_PAID",
     },
