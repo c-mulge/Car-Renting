@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
+import NotificationBell from "../common/NotificationBell";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Navbar = () => {
         </Link>
 
         <div className="flex gap-6 items-center">
+          {user && <NotificationBell />}
           <Link to="/">Home</Link>
 
           <Link to="/vehicles">Vehicles</Link>
